@@ -3,9 +3,15 @@ import { useMemo } from 'react'
 import { createEditor, Editor } from 'slate'
 import { Editable, Slate, withReact } from 'slate-react'
 import { useAtomValue } from 'jotai'
-import { activeToolAtom, TOOL_AUTOCOMPLETE, TOOL_REWRITER } from '../../state'
+import {
+  activeToolAtom,
+  TOOL_AUTOCOMPLETE,
+  TOOL_RESPONSE_BUTTONS,
+  TOOL_REWRITER,
+} from '../../state'
 import AutoComplete from './AutoComplete'
 import Rewriter from './Rewriter'
+import ResponseButtons from './ResponseButtons'
 
 const Leaf = ({ attributes, children, leaf }) => {
   if (leaf.bold) {
@@ -50,6 +56,17 @@ const EditorWrapper = styled.div`
   padding: 16px;
 `
 
+const heightForTool = (tool) => {
+  switch (tool) {
+    case TOOL_REWRITER:
+      return '140px'
+    case TOOL_RESPONSE_BUTTONS:
+      return '140px'
+    default:
+      return '400px'
+  }
+}
+
 const CustomEditor = () => {
   const editor = useMemo(() => withReact(createEditor()), [])
   const activeTool = useAtomValue(activeToolAtom)
@@ -58,7 +75,7 @@ const CustomEditor = () => {
     <Root>
       <EditorWrapper
         style={{
-          minHeight: activeTool == TOOL_REWRITER ? '140px' : '400px',
+          minHeight: heightForTool(activeTool),
         }}
       >
         <Slate
@@ -100,6 +117,9 @@ const CustomEditor = () => {
         </Slate>
       </EditorWrapper>
       {activeTool == TOOL_REWRITER && <Rewriter editor={editor} />}
+      {activeTool == TOOL_RESPONSE_BUTTONS && (
+        <ResponseButtons editor={editor} />
+      )}
     </Root>
   )
 }

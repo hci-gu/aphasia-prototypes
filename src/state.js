@@ -12,7 +12,12 @@ export const prepromptAtom = atom(null)
 
 export const TOOL_AUTOCOMPLETE = 'Auto complete'
 export const TOOL_REWRITER = 'Rewriter'
-export const availableTools = [TOOL_AUTOCOMPLETE, TOOL_REWRITER]
+export const TOOL_RESPONSE_BUTTONS = 'Response buttons'
+export const availableTools = [
+  TOOL_RESPONSE_BUTTONS,
+  TOOL_AUTOCOMPLETE,
+  TOOL_REWRITER,
+]
 export const activeToolAtom = atom(availableTools[0])
 
 const mockSetWords = () => {

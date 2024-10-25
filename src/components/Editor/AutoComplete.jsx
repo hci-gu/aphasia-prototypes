@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { Editor } from 'slate'
 import { useFocused, useSlate } from 'slate-react'
-import { useIsStartingNewWord } from './hooks'
 import { debounce } from 'lodash'
 import * as api from '../../api'
 import { Button, Flex, Loader } from '@mantine/core'
@@ -35,70 +34,68 @@ const AutoComplete = () => {
   const ref = useRef()
   const editor = useSlate()
   const inFocus = useFocused()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [suggestedWords, setSuggestedWords] = useState(null)
   const preprompt = useAtomValue(prepromptAtom)
-  const isStartingNewWord = useIsStartingNewWord()
+
+  const editorState = Editor.string(editor, [])
+
+  const [debouncedEditorState, setDebouncedEditorState] = useState(editorState)
 
   useEffect(() => {
-    const el = ref.current
-    const { selection } = editor
-    if (!el || !inFocus || !selection) {
+    const handler = setTimeout(() => {
+      setDebouncedEditorState(editorState)
+    }, 500)
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [editorState])
+
+  useEffect(() => {
+    if (!inFocus || !editor.selection || debouncedEditorState.length < 5) {
       return
     }
 
-    const run = async () => {
-      // Always show the menu at the cursor position, even if no text is selected
-      const domSelection = window.getSelection()
-      if (domSelection.rangeCount > 0) {
-        const domRange = domSelection.getRangeAt(0)
-        const rect = domRange.getBoundingClientRect()
-        el.style.opacity = '1'
-        el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight}px`
-        el.style.left = `${
-          rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
-        }px`
-        console.log(isStartingNewWord(), Editor.string(editor, []))
+    let isCancelled = false
+    setLoading(true)
 
-        if (!suggestedWords) {
-          const editorState = Editor.string(editor, [])
-          if (!editorState || editorState.length < 5) {
-            return
-          }
-          // const prompt = `${basePrompt}\n${editorState}`
-          setLoading(true)
-          const words = await api.suggestNextWords(editorState, preprompt)
-          setLoading(false)
-          setSuggestedWords({
-            words,
-            state: editorState,
-          })
-        }
+    const fetchData = async () => {
+      const words = await api.suggestNextWords(debouncedEditorState, preprompt)
+      if (!isCancelled) {
+        setSuggestedWords({ words, state: debouncedEditorState })
       }
+      setLoading(false)
     }
-    const debouncedRun = debounce(run, 500)
 
-    let timeout
-    if (loading) {
-      timeout = setTimeout(() => {
-        debouncedRun()
-      }, 1000)
-    }
+    fetchData()
 
     return () => {
-      clearTimeout(timeout)
-      debouncedRun.cancel()
+      isCancelled = true
     }
-  }, [preprompt, editor, isStartingNewWord])
+  }, [debouncedEditorState, preprompt, inFocus])
 
   useEffect(() => {
-    if (suggestedWords) {
-      const editorState = Editor.string(editor, [])
-      if (suggestedWords.state != editorState) {
-        setSuggestedWords(null)
-      }
+    if (suggestedWords && suggestedWords.state !== editorState) {
+      setSuggestedWords(null)
     }
-  })
+  }, [editorState, suggestedWords])
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !inFocus || !editor.selection) {
+      return
+    }
+    const domSelection = window.getSelection()
+    if (domSelection.rangeCount > 0) {
+      const domRange = domSelection.getRangeAt(0)
+      const rect = domRange.getBoundingClientRect()
+      el.style.opacity = '1'
+      el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight}px`
+      el.style.left = `${
+        rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
+      }px`
+    }
+  }, [editorState, inFocus, editor.selection])
 
   const onClick = (index) => {
     if (suggestedWords) {
@@ -110,20 +107,17 @@ const AutoComplete = () => {
 
   const onRefresh = async () => {
     if (suggestedWords) {
-      const editorState = Editor.string(editor, [])
       const currentWords = suggestedWords.words
       setSuggestedWords(null)
       setLoading(true)
-      const words = await api.suggestNextWords(
-        editorState,
-        preprompt,
-        currentWords
-      )
+      const words = await api.getCompletion(editorState, preprompt)
+      //   const words = await api.suggestNextWords(
+      //     editorState,
+      //     preprompt,
+      //     currentWords
+      //   )
+      setSuggestedWords({ words, state: editorState })
       setLoading(false)
-      setSuggestedWords({
-        words,
-        state: editorState,
-      })
     }
   }
 
