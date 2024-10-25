@@ -1,26 +1,52 @@
 import styled from '@emotion/styled'
-import React from 'react'
+import React, { useState } from 'react'
 import DarkModeToggle from './components/DarkModeToggle'
-import { AppShell, Flex } from '@mantine/core'
+import { AppShell, Button, Card, Flex, Text, Textarea } from '@mantine/core'
+import * as api from './api'
+import { useNextWords } from './state'
+import RespondToEmail from './pages/RespondToEmail'
+import SelectPage from './components/SelectPage'
+import { createBrowserRouter } from 'react-router-dom'
+import { Routes } from 'react-router-dom'
+import { Route } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
+import EmptyPage from './pages/Empty'
+import PhotoPage from './pages/PhotoPage'
+import SelectTool from './components/SelectTool'
 
 const Container = styled.div`
   margin: 0 auto;
   width: 90%;
+  padding-top: 80px;
+  padding-bottom: 196px;
 `
 
-const App = () => {
+const AppContainer = () => {
   return (
     <AppShell>
       <AppShell.Header h={64} p={16}>
-        <Flex align="center" justify="end">
-          <DarkModeToggle />
+        <Flex align="center" justify="end" gap={8}>
+          <SelectTool />
+          <SelectPage />
         </Flex>
       </AppShell.Header>
       <Container>
-        <h1>Template</h1>
-        <div>now build stuff</div>
+        <Outlet />
       </Container>
     </AppShell>
+  )
+}
+
+const App = ({ Outlet }) => {
+  return (
+    <Routes>
+      <Route path="/" element={<AppContainer />}>
+        <Route path="" element={<EmptyPage />} />
+        <Route path="photo" element={<PhotoPage />} />
+        <Route path="email" element={<RespondToEmail />} />
+        <Route path="chat" element={<RespondToEmail />} />
+      </Route>
+    </Routes>
   )
 }
 
