@@ -8,7 +8,7 @@ import { IconRefresh } from '@tabler/icons-react'
 import useApi from '../../api/useApi'
 
 const Popup = styled.div`
-  padding: 8px 7px 6px;
+  /* padding: 8px 7px 6px; */
   position: absolute;
   z-index: 1;
   top: -10000px;
@@ -27,69 +27,64 @@ const Portal = ({ children }) => {
     : null
 }
 
-const AutoComplete = () => {
+const AutoCompleteOnKey = () => {
   const ref = useRef()
   const editor = useSlate()
   const inFocus = useFocused()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [suggestedWords, setSuggestedWords] = useState(null)
   const api = useApi()
 
   const editorState = Editor.string(editor, [])
 
-  const [debouncedEditorState, setDebouncedEditorState] = useState(editorState)
-
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedEditorState(editorState)
-    }, 5000)
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [editorState])
-
-  useEffect(() => {
-    if (!inFocus || !editor.selection || debouncedEditorState.length < 5) {
-      return
-    }
-
-    let isCancelled = false
-    setLoading(true)
-
-    const fetchData = async () => {
-      const words = await api.suggestNextWords(debouncedEditorState)
-      if (!isCancelled) {
-        setSuggestedWords({ words, state: debouncedEditorState })
+    const handleKeyPress = (event) => {
+      if (event.key === 'Tab') {
+        // Change "Tab" to any desired key
+        event.preventDefault()
+        triggerSuggestions()
       }
-      setLoading(false)
     }
 
-    fetchData()
+    window.addEventListener('keydown', handleKeyPress)
 
     return () => {
-      isCancelled = true
+      window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [debouncedEditorState, inFocus])
+  }, [editorState, inFocus])
 
+  // Clear suggestions if editorState changes and suggestions are open
   useEffect(() => {
     if (suggestedWords && suggestedWords.state !== editorState) {
       setSuggestedWords(null)
     }
   }, [editorState, suggestedWords])
 
+  const triggerSuggestions = async () => {
+    if (!inFocus || !editor.selection || editorState.length < 5) return
+
+    setLoading(true)
+    const words = await api.suggestNextWords(editorState)
+    setSuggestedWords({ words, state: editorState })
+    setLoading(false)
+  }
+
   useEffect(() => {
     const el = ref.current
-    if (!el || !inFocus || !editor.selection) {
-      return
-    }
+    if (!el || !inFocus || !editor.selection) return
+
     const domSelection = window.getSelection()
     if (domSelection.rangeCount > 0) {
       const domRange = domSelection.getRangeAt(0)
       const rect = domRange.getBoundingClientRect()
+
+      // Center the popup over the cursor
+      const popupHeight = el.offsetHeight
+      const popupWidth = el.offsetWidth
       el.style.opacity = '1'
-      el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight}px`
+      el.style.top = `${rect.bottom + window.pageYOffset - 76}px` // Adjust distance below the cursor
       el.style.left = `${
-        rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
+        rect.left + window.pageXOffset - popupWidth / 2 + rect.width / 2
       }px`
     }
   }, [editorState, inFocus, editor.selection])
@@ -107,18 +102,11 @@ const AutoComplete = () => {
       const currentWords = suggestedWords.words
       setSuggestedWords(null)
       setLoading(true)
-      const words = await api.getCompletion(editorState, preprompt)
-      //   const words = await api.suggestNextWords(
-      //     editorState,
-      //     preprompt,
-      //     currentWords
-      //   )
+      const words = await api.getCompletion(editorState)
       setSuggestedWords({ words, state: editorState })
       setLoading(false)
     }
   }
-
-  console.log('suggestedWords', suggestedWords, loading)
 
   return (
     <Portal>
@@ -129,16 +117,20 @@ const AutoComplete = () => {
           opacity: !loading && !suggestedWords ? 0 : 1,
         }}
       >
-        {loading && <Loader />}
+        {loading && (
+          <div style={{ width: 44, height: 44, padding: 4 }}>
+            <Loader w={32} />
+          </div>
+        )}
         {suggestedWords && (
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', padding: 8 }}>
             <Button
               p={4}
               radius={100}
               style={{
                 position: 'absolute',
-                right: -32,
-                top: -32,
+                right: -24,
+                top: -24,
               }}
               disabled={loading}
               onClick={onRefresh}
@@ -159,4 +151,4 @@ const AutoComplete = () => {
   )
 }
 
-export default AutoComplete
+export default AutoCompleteOnKey

@@ -2,9 +2,10 @@ import styled from '@emotion/styled'
 import { useAtomValue } from 'jotai'
 import { prepromptAtom } from '../../state'
 import { useEffect, useState } from 'react'
-import * as api from '../../api'
 import { Button, Center, Flex, Loader, SimpleGrid, Text } from '@mantine/core'
-import { Editor } from 'slate'
+import { Editor, Transforms } from 'slate'
+import { ReactEditor } from 'slate-react'
+import useApi from '../../api/useApi'
 
 const Root = styled.div``
 
@@ -35,6 +36,7 @@ const colorForType = (type) => {
 }
 
 const ResponseButtons = ({ editor }) => {
+  const api = useApi()
   const [loading, setLoading] = useState(false)
   const [buttons, setButtons] = useState([])
   const preprompt = useAtomValue(prepromptAtom)
@@ -47,7 +49,7 @@ const ResponseButtons = ({ editor }) => {
     const run = async () => {
       setLoading(true)
 
-      const buttonsTexts = await api.suggestResponseButtons(preprompt.text)
+      const buttonsTexts = await api.suggestResponseButtons()
       const buttons = buttonsTexts.map((text) => {
         const [type, ...rest] = text.split(':')
 
@@ -68,7 +70,16 @@ const ResponseButtons = ({ editor }) => {
     const text = Editor.string(editor, [])
     const newText = text + button.text
 
-    const finalText = await api.rewriteText(newText, preprompt)
+    const finalText = await api.rewriteText(newText)
+    if (!editor.selection) {
+      ReactEditor.focus(editor)
+    }
+    Transforms.select(editor, {
+      anchor: Editor.start(editor, []),
+      focus: Editor.end(editor, []),
+    })
+    Transforms.delete(editor)
+
     Editor.insertText(editor, finalText)
   }
 

@@ -2,9 +2,7 @@ import styled from '@emotion/styled'
 import { Button } from '@mantine/core'
 import { useState } from 'react'
 import { Editor } from 'slate'
-import * as api from '../../api'
-import { useAtomValue } from 'jotai'
-import { prepromptAtom } from '../../state'
+import useApi from '../../api/useApi'
 
 const Root = styled.div`
   display: flex;
@@ -21,13 +19,13 @@ const TextContainer = styled.div`
 `
 
 const Rewriter = ({ editor }) => {
-  const [generatedText, setGeneratedText] = useState('hallå eller')
-  const prePrompt = useAtomValue(prepromptAtom)
+  const [generatedText, setGeneratedText] = useState('')
+  const api = useApi()
 
   const onClick = async () => {
     const text = Editor.string(editor, [])
 
-    setGeneratedText(await api.rewriteText(text, prePrompt))
+    setGeneratedText(await api.rewriteText(text))
   }
 
   return (

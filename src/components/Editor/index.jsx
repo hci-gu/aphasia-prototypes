@@ -9,7 +9,7 @@ import {
   TOOL_RESPONSE_BUTTONS,
   TOOL_REWRITER,
 } from '../../state'
-import AutoComplete from './AutoComplete'
+import AutoComplete from './AutoCompleteOnKey'
 import Rewriter from './Rewriter'
 import ResponseButtons from './ResponseButtons'
 

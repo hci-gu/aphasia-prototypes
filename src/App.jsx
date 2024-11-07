@@ -13,6 +13,7 @@ import { Outlet } from 'react-router-dom'
 import EmptyPage from './pages/Empty'
 import PhotoPage from './pages/PhotoPage'
 import SelectTool from './components/SelectTool'
+import EditProfile from './components/EditProfile'
 
 const Container = styled.div`
   margin: 0 auto;
@@ -26,6 +27,7 @@ const AppContainer = () => {
     <AppShell>
       <AppShell.Header h={64} p={16}>
         <Flex align="center" justify="end" gap={8}>
+          <EditProfile />
           <SelectTool />
           <SelectPage />
         </Flex>

@@ -4,12 +4,15 @@
   "description": "My current go-to templates for websites, different branches for different stacks maybe",
   "main": "index.js",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/template": "^7.25.9",
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.1.3"
   },
