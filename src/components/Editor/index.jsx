@@ -6,10 +6,12 @@ import { useAtomValue } from 'jotai'
 import {
   activeToolAtom,
   TOOL_AUTOCOMPLETE,
+  TOOL_AUTOCOMPLETE_ON_KEY,
   TOOL_RESPONSE_BUTTONS,
   TOOL_REWRITER,
 } from '../../state'
-import AutoComplete from './AutoCompleteOnKey'
+// import AutoCompleteOnKey from './AutoCompleteOnKey'
+import AutoComplete from './AutoComplete'
 import Rewriter from './Rewriter'
 import ResponseButtons from './ResponseButtons'
 
@@ -86,7 +88,10 @@ const CustomEditor = () => {
             },
           ]}
         >
-          {activeTool == TOOL_AUTOCOMPLETE && <AutoComplete />}
+          {(activeTool == TOOL_AUTOCOMPLETE ||
+            activeTool == TOOL_AUTOCOMPLETE_ON_KEY) && (
+            <AutoComplete type={activeTool} />
+          )}
           <Editable
             style={{
               height: '100%',

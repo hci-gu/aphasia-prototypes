@@ -5,10 +5,17 @@ import { Editor } from 'slate'
 import { useFocused, useSlate } from 'slate-react'
 import { Button, Flex, Loader } from '@mantine/core'
 import { IconRefresh } from '@tabler/icons-react'
+import { useControls } from 'leva'
+
 import useApi from '../../api/useApi'
+import {
+  TOOL_AUTOCOMPLETE,
+  TOOL_AUTOCOMPLETE_ON_KEY,
+  toolSettingsAtom,
+} from '../../state'
+import { useAtomValue } from 'jotai'
 
 const Popup = styled.div`
-  padding: 8px 7px 6px;
   position: absolute;
   z-index: 1;
   top: -10000px;
@@ -27,7 +34,31 @@ const Portal = ({ children }) => {
     : null
 }
 
-const AutoComplete = () => {
+const WordButton = ({ word, onClick, editorState }) => {
+  let text = word
+
+  const isWritingStartOfWord = !editorState.endsWith(' ')
+
+  let partOfLastWord = ''
+  if (isWritingStartOfWord) {
+    const lastWord = editorState.split(' ').slice(-1)[0]
+    partOfLastWord = lastWord.slice(0, -1)
+  }
+
+  return (
+    <Button onClick={onClick}>
+      {isWritingStartOfWord && (
+        <strong>{editorState.split(' ').slice(-1)[0]}</strong>
+      )}
+      <span style={{ fontWeight: isWritingStartOfWord ? 'lighter' : 'bold' }}>
+        {word}
+      </span>
+    </Button>
+  )
+}
+
+const AutoComplete = ({ type }) => {
+  const { autoCompleteDelay } = useAtomValue(toolSettingsAtom)
   const ref = useRef()
   const editor = useSlate()
   const inFocus = useFocused()
@@ -40,15 +71,41 @@ const AutoComplete = () => {
   const [debouncedEditorState, setDebouncedEditorState] = useState(editorState)
 
   useEffect(() => {
+    if (type !== TOOL_AUTOCOMPLETE_ON_KEY) return
+
+    const handleKeyPress = async (event) => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        if (!inFocus || !editor.selection) return
+        setSuggestedWords(null)
+        setLoading(true)
+        const words = await api.suggestNextWords(editorState)
+        setSuggestedWords({ words, state: editorState })
+        setLoading(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [editorState, inFocus])
+
+  useEffect(() => {
+    if (type !== TOOL_AUTOCOMPLETE) return
+
     const handler = setTimeout(() => {
       setDebouncedEditorState(editorState)
-    }, 5000)
+    }, autoCompleteDelay)
     return () => {
       clearTimeout(handler)
     }
-  }, [editorState])
+  }, [autoCompleteDelay, editorState])
 
   useEffect(() => {
+    if (type !== TOOL_AUTOCOMPLETE) return
+
     if (!inFocus || !editor.selection || debouncedEditorState.length < 5) {
       return
     }
@@ -86,10 +143,11 @@ const AutoComplete = () => {
     if (domSelection.rangeCount > 0) {
       const domRange = domSelection.getRangeAt(0)
       const rect = domRange.getBoundingClientRect()
+      const popupWidth = el.offsetWidth
       el.style.opacity = '1'
-      el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight}px`
+      el.style.top = `${rect.bottom + window.pageYOffset - 76}px` // Adjust distance below the cursor
       el.style.left = `${
-        rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
+        rect.left + window.pageXOffset - popupWidth / 2 + rect.width / 2
       }px`
     }
   }, [editorState, inFocus, editor.selection])
@@ -118,8 +176,6 @@ const AutoComplete = () => {
     }
   }
 
-  console.log('suggestedWords', suggestedWords, loading)
-
   return (
     <Portal>
       <Popup
@@ -129,16 +185,20 @@ const AutoComplete = () => {
           opacity: !loading && !suggestedWords ? 0 : 1,
         }}
       >
-        {loading && <Loader />}
+        {loading && (
+          <div style={{ width: 44, height: 44, padding: 4 }}>
+            <Loader w={32} />
+          </div>
+        )}
         {suggestedWords && (
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', padding: 8 }}>
             <Button
               p={4}
               radius={100}
               style={{
                 position: 'absolute',
-                right: -32,
-                top: -32,
+                right: -24,
+                top: -24,
               }}
               disabled={loading}
               onClick={onRefresh}
@@ -147,9 +207,12 @@ const AutoComplete = () => {
             </Button>
             <Flex gap={4}>
               {suggestedWords.words.map((word, index) => (
-                <Button key={word} onClick={() => onClick(index)}>
-                  {word}
-                </Button>
+                <WordButton
+                  key={`Word_${word}`}
+                  onClick={() => onClick(index)}
+                  word={word}
+                  editorState={editorState}
+                />
               ))}
             </Flex>
           </div>

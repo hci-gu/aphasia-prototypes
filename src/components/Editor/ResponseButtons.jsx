@@ -38,6 +38,7 @@ const colorForType = (type) => {
 const ResponseButtons = ({ editor }) => {
   const api = useApi()
   const [loading, setLoading] = useState(false)
+  const [buttonLoading, setButtonLoading] = useState(-1)
   const [buttons, setButtons] = useState([])
   const preprompt = useAtomValue(prepromptAtom)
 
@@ -66,11 +67,13 @@ const ResponseButtons = ({ editor }) => {
     run()
   }, [preprompt])
 
-  const onButtonClick = async (button) => {
+  const onButtonClick = async (button, index) => {
     const text = Editor.string(editor, [])
     const newText = text + button.text
 
-    const finalText = await api.rewriteText(newText)
+    setButtonLoading(index)
+
+    const finalText = await api.rewriteButtonResponse(newText)
     if (!editor.selection) {
       ReactEditor.focus(editor)
     }
@@ -81,20 +84,26 @@ const ResponseButtons = ({ editor }) => {
     Transforms.delete(editor)
 
     Editor.insertText(editor, finalText)
+    setButtonLoading(-1)
   }
 
   return (
     <Root>
       <SimpleGrid cols={2}>
         {!loading &&
-          buttons.map((button) => (
+          buttons.map((button, index) => (
             <Button
+              disabled={buttonLoading === index}
               w={'100%'}
               h={64}
               color={colorForType(button.type)}
-              onClick={() => onButtonClick(button)}
+              onClick={() => onButtonClick(button, index)}
             >
-              <Text lineClamp={2}>{button.text}</Text>
+              {buttonLoading === index ? (
+                <Loader />
+              ) : (
+                <Text lineClamp={2}>{button.text}</Text>
+              )}
             </Button>
           ))}
       </SimpleGrid>

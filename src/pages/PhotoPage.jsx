@@ -9,20 +9,20 @@ const PhotoPage = () => {
 
   useLayoutEffect(() => {
     setPreprompt({
-      text: `Bilden visar ett idylliskt kustlandskap vid solnedgången. I förgrunden finns en strand med grunt vatten, där solens gyllene strålar reflekteras och skapar en varm, glödande effekt på sanden och vattnet. Två personer promenerar eller springer längs stranden, medan en cyklist syns i bakgrunden på en liten stig som leder till huset.
-
-Det centrala huset har en charmig, klassisk stil med grågrön fasad, mörka fönsterkarmar och en veranda som sträcker sig längs framsidan. Huset har en rejäl skorsten och är omgivet av buskage och några små träd.
-
-I bakgrunden reser sig ett träd med krokiga grenar, som skapar en dramatisk siluett mot himlen. Himlen är fylld av fluffiga, orange- och rosafärgade moln som belyses av den nedgående solen, medan en flock måsar svävar högt uppe i luften, till synes lekfulla och fria.
-
-Solens strålar sträcker sig ut över scenen, och hela bilden fångar en känsla av lugn och harmoni i naturen, med en subtil rörelse från både människor och djur.`,
+      text: `Det här är en bild av en hund och en katt som sitter bredvid varandra på en soffa, tittandes ut genom ett fönster mot en upplyst stad. På fönsterbrädan står några dekorativa vaser, och rummet är svagt upplyst av en lampa. Bildens mest framträdande element är hundens och kattens lugna närvaro, samt den stämningsfulla utsikten över staden i kvällsljus.`,
       type: 'photo',
     })
   }, [])
 
   return (
     <Flex justify="center" align="center" direction="column" gap={16}>
-      <Image src="/images/house.png" alt="A photo of a cat" w={500} h={500} />
+      <Image
+        src="/images/dog_cat.png"
+        alt="A photo of a cat"
+        w={800}
+        h={500}
+        radius={8}
+      />
       <CustomEditor />
     </Flex>
   )

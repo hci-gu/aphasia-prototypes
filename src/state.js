@@ -5,21 +5,28 @@ import { atomWithStorage } from 'jotai/utils'
 
 export const suggestedWordsAtom = atom([])
 
-export const profileAtom = atomWithStorage('')
+export const profileAtom = atomWithStorage('profile', '')
 
 export const prepromptAtom = atom(null)
 
 // export const additionalSystemPromptAtom = atom(null)
 
 export const TOOL_AUTOCOMPLETE = 'Auto complete'
+export const TOOL_AUTOCOMPLETE_ON_KEY = 'Auto complete on key'
 export const TOOL_REWRITER = 'Rewriter'
 export const TOOL_RESPONSE_BUTTONS = 'Response buttons'
 export const availableTools = [
   TOOL_AUTOCOMPLETE,
+  TOOL_AUTOCOMPLETE_ON_KEY,
   TOOL_RESPONSE_BUTTONS,
   TOOL_REWRITER,
 ]
-export const activeToolAtom = atomWithStorage(availableTools[0])
+export const activeToolAtom = atomWithStorage('activeTool', availableTools[0])
+
+export const toolSettingsAtom = atomWithStorage('toolSettings', {
+  autoCompleteDelay: 5000,
+  autoCompleteMaxWords: 5,
+})
 
 const mockSetWords = () => {
   return new Promise((resolve) => {

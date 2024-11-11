@@ -5,50 +5,35 @@ import { useAtom } from 'jotai'
 import CustomEditor from '../components/Editor'
 
 const today = new Date()
-const tomorrow = new Date(today)
-tomorrow.setDate(today.getDate() + 1)
-let mondayNextWeek = new Date(today)
-mondayNextWeek.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7))
-let wednesdayNextWeek = new Date(mondayNextWeek)
-wednesdayNextWeek.setDate(mondayNextWeek.getDate() + 2)
-let fridayNextWeek = new Date(mondayNextWeek)
-fridayNextWeek.setDate(mondayNextWeek.getDate() + 4)
+let nextSaturday = new Date()
+nextSaturday.setDate(today.getDate() + ((6 - today.getDay()) % 7) + 1)
+const nextSaturdayString = nextSaturday.toLocaleDateString('sv-SE', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+})
 
 const baseEmail = `
 Hej,
 
-Vi behöver tyvärr boka om din tandläkartid som var planerad till imorgon ${tomorrow.toLocaleDateString(
-  'sv-SE',
-  {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }
-)} kl. 10:30. Vi ber om ursäkt för besväret och hoppas att någon av följande tider nästa vecka passar dig:
-${mondayNextWeek.toLocaleDateString('sv-SE', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-})} kl. 10:30
-${wednesdayNextWeek.toLocaleDateString('sv-SE', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-})} kl. 09:30
-${fridayNextWeek.toLocaleDateString('sv-SE', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-})} kl. 15:15
-Vänligen återkom med den tid som passar bäst för dig, så bokar vi in dig på nytt. Om ingen av dessa tider fungerar, låt oss veta så hittar vi ett alternativ.
-Tack för din förståelse och hör gärna av dig om du har några frågor.
+Vi vill gärna bjuda in dig till ett födelsedagsfirande som vi planerar att hålla nästa helg, och vi hoppas att du kan vara med och fira!
 
-Med vänlig hälsning,
+Här är detaljerna för firandet: ${nextSaturdayString} kl. 18:00 På Restaurang Måltiden, Centrala Gatan 12
 
-Dr. Erik Larsson
-Tandvårdskliniken Leende
-070-123 45 67
-info@leendetandvard.se
+För att göra det extra speciellt vill vi att du väljer din favoritmat från restaurangens meny i förväg, så vi kan säkerställa att alla får njuta av något de gillar. Skicka gärna tillbaka med din matpreferens från menyn nedan, så ordnar vi det åt dig:
+
+Alternativ 1: Grillad lax med potatisgratäng och sallad
+Alternativ 2: Vegetarisk pasta med svamp och spenat
+Alternativ 3: Hamburgare med pommes och tillbehör
+Om ingen av dessa rätter tilltalar dig, hör av dig så hittar vi ett alternativ!
+
+Vi ser fram emot en rolig kväll och hoppas du kan vara med och fira!
+
+Hör gärna av dig om du har några frågor.
+
+Med vänliga hälsningar,
+Anna
 `
 
 const RespondToEmail = () => {

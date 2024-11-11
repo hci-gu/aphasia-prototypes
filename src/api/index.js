@@ -4,6 +4,7 @@ import {
   RESPONSE_BUTTONS_SYSTEM_PROMPT,
   formatPrePrompt,
   SUGGEST_TEXT_PROMPT,
+  RESPONSE_BUTTON_REWRITE_SYSTEM_PROMPT,
 } from './prompts'
 import azureRequest from './azure'
 
@@ -59,6 +60,26 @@ const buildMessages = (
   return messages
 }
 
+export async function rewriteButtonResponse(
+  str,
+  prePrompt = null,
+  profile = null
+) {
+  const data = await makeRequest({
+    messages: buildMessages(
+      {
+        role: 'system',
+        content: RESPONSE_BUTTON_REWRITE_SYSTEM_PROMPT,
+      },
+      str,
+      prePrompt,
+      profile
+    ),
+  })
+
+  return data.choices[0].message.content
+}
+
 export async function rewriteText(str, prePrompt = null, profile = null) {
   const data = await makeRequest({
     messages: buildMessages(
@@ -101,19 +122,8 @@ export async function suggestNextWords(
   str,
   preprompt = null,
   profile = null,
-  negativeWords = []
+  maxWords = 5
 ) {
-  const word = await mockGetNextWord()
-  return [word, word, word]
-
-  // Create the instruction for excluding negative words
-  let negativeWordsPrompt = ''
-  if (negativeWords.length > 0) {
-    negativeWordsPrompt = `Do not suggest the following words: ${negativeWords.join(
-      ', '
-    )}.`
-  }
-
   const prompt = preprompt ? formatPrePrompt(str, preprompt) : str
 
   if (ACTIVE_CLIENT === 'azure') {
@@ -127,24 +137,41 @@ export async function suggestNextWords(
         preprompt,
         profile
       ),
-      max_tokens: 3,
+      max_tokens: 8,
       temperature: 0.99,
-      n: 7,
+      n: 5,
     })
-    console.log(data)
-    const words = data.choices.map((choice) => {
-      // get first word
-      const firstWord = choice.message.content.split(' ')[0]
-      return firstWord
+    let words = []
+    for (let choice of data.choices) {
+      if (!choice.message.content) continue
+
+      const choiceWords = choice.message.content.split(' ')
+
+      for (let i = 0; i < 2; i++) {
+        const cleanedWord = choiceWords[i].replace(/[^a-zA-ZåäöÅÄÖ]/g, '')
+        words.push(cleanedWord)
+        if (i == 0) {
+          words.push(cleanedWord)
+          words.push(cleanedWord)
+        }
+      }
+    }
+    words.filter((word) => word !== '')
+
+    // create map with word frequencies
+    const wordMap = new Map()
+    words.forEach((word) => {
+      const count = wordMap.get(word) || 0
+      wordMap.set(word, count + 1)
     })
+
     // filter identical words
     const uniqueWords = [...new Set(words)]
+    // sort by frequency
+    uniqueWords.sort((a, b) => wordMap.get(b) - wordMap.get(a))
 
-    console.log(words, uniqueWords)
-    return uniqueWords
-    const text = data.choices[0].message.content
-    console.log(text, text.split('\n'))
-    return text.split('\n')
+    // return only the top N words
+    return uniqueWords.slice(0, maxWords)
   }
 
   const data = await makeRequest({
