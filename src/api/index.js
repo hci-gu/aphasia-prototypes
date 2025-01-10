@@ -96,14 +96,19 @@ export async function rewriteText(
   profile = null,
   style = ''
 ) {
+  let content = ''
+
+  if (style == 'minimal' || style == 'spelling') {
+    content = extraRewritePromptForStyle(style)
+  } else {
+    content = `${REWRITE_SYSTEM_PROMPT}\n${extraRewritePromptForStyle(style)}`
+  }
+
   const data = await makeRequest({
     messages: buildMessages(
       {
         role: 'system',
-        content:
-          style == 'minimal'
-            ? extraRewritePromptForStyle(style)
-            : `${REWRITE_SYSTEM_PROMPT}\n${extraRewritePromptForStyle(style)}`,
+        content: content,
       },
       str,
       prePrompt,

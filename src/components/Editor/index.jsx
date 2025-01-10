@@ -1,10 +1,11 @@
 import styled from '@emotion/styled'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createEditor, Editor, Node, Transforms } from 'slate'
-import { Editable, Slate, withReact } from 'slate-react'
+import { Editable, Slate, useSlate, withReact } from 'slate-react'
 import { useAtomValue } from 'jotai'
 import {
   activeToolAtom,
+  selectedEmailAtom,
   TOOL_AUTOCOMPLETE,
   TOOL_AUTOCOMPLETE_ON_KEY,
   TOOL_RESPONSE_BUTTONS,
@@ -77,6 +78,52 @@ const heightForTool = (tool) => {
   }
 }
 
+const SelectAllTextButton = () => {
+  const editor = useSlate()
+  return (
+    <Button
+      variant="light"
+      onClick={() => {
+        // select all text
+        Transforms.select(editor, {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, []),
+        })
+        setTimeout(() => {
+          ReactEditor.focus(editor)
+        }, 0)
+      }}
+      style={{
+        position: 'absolute',
+        bottom: 12,
+        left: 138,
+      }}
+    >
+      Markera text
+    </Button>
+  )
+}
+
+const ClearOnEmailChange = () => {
+  const editor = useSlate()
+  const selectedEmail = useAtomValue(selectedEmailAtom)
+  const [email, setEmail] = useState(selectedEmail)
+
+  useEffect(() => {
+    if (selectedEmail !== email) {
+      setEmail(selectedEmail)
+      Editor.withoutNormalizing(editor, () => {
+        Transforms.delete(editor, {
+          at: {
+            anchor: Editor.start(editor, []),
+            focus: Editor.end(editor, []),
+          },
+        })
+      })
+    }
+  }, [email, selectedEmail])
+}
+
 const CustomEditor = ({ onActionClick = () => {} }) => {
   const editor = useMemo(() => withReact(createEditor()), [])
   const activeTool = useAtomValue(activeToolAtom)
@@ -92,6 +139,7 @@ const CustomEditor = ({ onActionClick = () => {} }) => {
           {/* {(activeTool == TOOL_AUTOCOMPLETE ||
             activeTool == TOOL_AUTOCOMPLETE_ON_KEY) && (
             )} */}
+          <ClearOnEmailChange />
           <AutoComplete type={TOOL_AUTOCOMPLETE} />
           <Rewriter editor={editor} />
           <Editable
@@ -122,6 +170,7 @@ const CustomEditor = ({ onActionClick = () => {} }) => {
               console.log(newValue)
             }}
           />
+          <SelectAllTextButton />
         </Slate>
         <Button
           onClick={() => {

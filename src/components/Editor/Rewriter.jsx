@@ -62,10 +62,10 @@ const Rewriter = () => {
     if (!editor.selection) {
       ReactEditor.focus(editor)
     }
-    Transforms.select(editor, {
-      anchor: Editor.start(editor, []),
-      focus: Editor.end(editor, []),
-    })
+    // Transforms.select(editor, {
+    //   anchor: Editor.start(editor, []),
+    //   focus: Editor.end(editor, []),
+    // })
     Transforms.delete(editor)
 
     Editor.insertText(editor, newText)
@@ -84,44 +84,68 @@ const Rewriter = () => {
           }}
         >
           <Flex direction="column" gap="sm" justify="center" align="center">
-            <Text>Skriv om din text</Text>
+            <Text size="lg" align="center">
+              Skriv om din text
+            </Text>
 
-            <SimpleGrid cols={2} spacing="md" style={{ padding: '0 16px' }}>
-              <Button
-                size="xs"
-                onClick={() => onRewriteOptionClick('minimal')}
-                variant="light"
-              >
-                Minimalt
-              </Button>
-              <Button
-                size="xs"
-                onClick={() => onRewriteOptionClick('formal')}
-                variant="light"
-              >
-                Formellt
-              </Button>
-              <Button
-                size="xs"
-                onClick={() => onRewriteOptionClick('casual')}
-                variant="light"
-              >
-                Avslappnat
-              </Button>
-              <Button
-                size="xs"
-                onClick={() => onRewriteOptionClick('shorter')}
-                variant="light"
-              >
-                Kortare
-              </Button>
-              <Button
-                size="xs"
-                onClick={() => onRewriteOptionClick('longer')}
-                variant="light"
-              >
-                Längre
-              </Button>
+            <SimpleGrid cols={3} spacing="md" style={{ padding: '0 16px' }}>
+              <Flex direction="column" gap="sm">
+                <Text size="sm" align="center" fw={800}>
+                  Stil
+                </Text>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('formal')}
+                  variant="light"
+                >
+                  Formellt
+                </Button>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('casual')}
+                  variant="light"
+                >
+                  Avslappnat
+                </Button>
+              </Flex>
+              <Flex direction="column" gap="sm">
+                <Text size="sm" align="center" fw={800}>
+                  Längd
+                </Text>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('minimal')}
+                  variant="light"
+                >
+                  Minimalt
+                </Button>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('shorter')}
+                  variant="light"
+                >
+                  Kortare
+                </Button>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('longer')}
+                  variant="light"
+                >
+                  Längre
+                </Button>
+              </Flex>
+              <Flex direction="column" gap="sm">
+                <Text size="sm" align="center" fw={800}>
+                  Stavning
+                </Text>
+                <Button
+                  size="xs"
+                  onClick={() => onRewriteOptionClick('spelling')}
+                  variant="light"
+                >
+                  Fixa stavfel
+                </Button>
+              </Flex>
             </SimpleGrid>
           </Flex>
         </Popup>

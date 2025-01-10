@@ -56,6 +56,8 @@ export const extraRewritePromptForStyle = (style) => {
   switch (style) {
     case 'minimal':
       return 'Rewrite the text to only have the essential information needed for a response, remove any unnecessary details, fluffy language, or extra context.'
+    case 'spelling':
+      return 'Rewrite the text to correct any spelling or grammatical errors. Do not change anything else whatsoever.'
     case 'shorter':
       return 'Rewrite the text to make it significantly more concise, even if the original is already short. Remove as many words as possible while keeping the meaning intact. Aim for brevity over detail, condensing the text to its absolute essentials. Always make the text 25% shorter than the original, cut out sentences if needed.'
     case 'longer':

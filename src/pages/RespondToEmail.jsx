@@ -152,7 +152,7 @@ const ReceivedEmail = ({ email }) => {
                 ) : (
                   <IconEye style={{ marginRight: 8 }} />
                 )}
-                Simplifiera
+                Förenkla
               </Button>
             )}
           </>
