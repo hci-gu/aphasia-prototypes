@@ -1,6 +1,6 @@
 import { Menu, Button, Text, rem, Textarea, Flex } from '@mantine/core'
-import { useAtom } from 'jotai'
-import { profileAtom } from '../state'
+import { useAtom, useSetAtom } from 'jotai'
+import { emailsAtom, INITIAL_EMAILS_STATE, profileAtom } from '../state'
 import { IconUser } from '@tabler/icons-react'
 import { useState } from 'react'
 
@@ -26,6 +26,7 @@ export const ProfileTextArea = () => {
 const EditProfile = () => {
   const [profile, saveProfile] = useAtom(profileAtom)
   const [profileText, setProfileText] = useState(profile)
+  const setEmails = useSetAtom(emailsAtom)
 
   return (
     <Menu shadow="md" width={400}>
@@ -45,6 +46,17 @@ const EditProfile = () => {
         </Menu.Label>
         <Menu.Divider />
         <ProfileTextArea />
+        <Flex justify="center" pb={4}>
+          <Button
+            onClick={() => {
+              setEmails(INITIAL_EMAILS_STATE)
+              window.location.reload()
+            }}
+            variant="light"
+          >
+            Rensa mail
+          </Button>
+        </Flex>
       </Menu.Dropdown>
     </Menu>
   )

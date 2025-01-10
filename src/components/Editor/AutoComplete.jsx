@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { Editor } from 'slate'
+import { Editor, Range } from 'slate'
 import { useFocused, useSlate } from 'slate-react'
 import { Button, Flex, Loader } from '@mantine/core'
 import { IconRefresh } from '@tabler/icons-react'
@@ -37,7 +37,8 @@ const Portal = ({ children }) => {
 const WordButton = ({ word, onClick, editorState }) => {
   let text = word
 
-  const isWritingStartOfWord = !editorState.endsWith(' ')
+  const isWritingStartOfWord =
+    !editorState.endsWith(' ') && !editorState.endsWith('.')
 
   let partOfLastWord = ''
   if (isWritingStartOfWord) {
@@ -110,10 +111,21 @@ const AutoComplete = ({ type }) => {
       return
     }
 
+    if (
+      !debouncedEditorState.endsWith(' ') &&
+      !debouncedEditorState.endsWith('.')
+    ) {
+      return
+    }
+
     let isCancelled = false
     setLoading(true)
 
     const fetchData = async () => {
+      let editorState = debouncedEditorState
+      if (editorState.endsWith('.')) {
+        editorState = `${editorState} `
+      }
       const words = await api.suggestNextWords(debouncedEditorState)
       if (!isCancelled) {
         setSuggestedWords({ words, state: debouncedEditorState })
@@ -152,10 +164,19 @@ const AutoComplete = ({ type }) => {
     }
   }, [editorState, inFocus, editor.selection])
 
+  useEffect(() => {
+    if (editor.selection && Range.isExpanded(editor.selection)) {
+      setSuggestedWords(null)
+    }
+  }, [editor.selection])
+
   const onClick = (index) => {
     if (suggestedWords) {
-      const word = suggestedWords.words[index]
-      Editor.insertText(editor, `${word} `)
+      let word = suggestedWords.words[index]
+      if (debouncedEditorState.endsWith('.')) {
+        word = ` ${word}`
+      }
+      Editor.insertText(editor, `${word}`)
       setSuggestedWords(null)
     }
   }
@@ -166,11 +187,6 @@ const AutoComplete = ({ type }) => {
       setSuggestedWords(null)
       setLoading(true)
       const words = await api.getCompletion(editorState, preprompt)
-      //   const words = await api.suggestNextWords(
-      //     editorState,
-      //     preprompt,
-      //     currentWords
-      //   )
       setSuggestedWords({ words, state: editorState })
       setLoading(false)
     }

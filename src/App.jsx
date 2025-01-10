@@ -17,7 +17,7 @@ import EditProfile from './components/EditProfile'
 
 const Container = styled.div`
   margin: 0 auto;
-  width: 90%;
+  width: 95%;
   padding-top: 80px;
   padding-bottom: 196px;
 `
@@ -28,8 +28,8 @@ const AppContainer = () => {
       <AppShell.Header h={64} p={16}>
         <Flex align="center" justify="end" gap={8}>
           <EditProfile />
-          <SelectTool />
-          <SelectPage />
+          {/* <SelectTool />
+          <SelectPage /> */}
         </Flex>
       </AppShell.Header>
       <Container>
@@ -43,10 +43,9 @@ const App = ({ Outlet }) => {
   return (
     <Routes>
       <Route path="/" element={<AppContainer />}>
-        <Route path="" element={<EmptyPage />} />
+        <Route path="" element={<RespondToEmail />} />
         <Route path="photo" element={<PhotoPage />} />
         <Route path="email" element={<RespondToEmail />} />
-        <Route path="chat" element={<RespondToEmail />} />
       </Route>
     </Routes>
   )

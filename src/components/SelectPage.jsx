@@ -24,11 +24,11 @@ const pages = [
     icon: <IconMail style={{ width: rem(14), height: rem(14) }} />,
     path: '/email',
   },
-  {
-    title: 'Chatta',
-    icon: <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />,
-    path: '/chat',
-  },
+  // {
+  //   title: 'Chatta',
+  //   icon: <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />,
+  //   path: '/chat',
+  // },
 ]
 
 const SelectPage = () => {

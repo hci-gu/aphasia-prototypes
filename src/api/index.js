@@ -5,13 +5,21 @@ import {
   formatPrePrompt,
   SUGGEST_TEXT_PROMPT,
   RESPONSE_BUTTON_REWRITE_SYSTEM_PROMPT,
+  extraRewritePromptForStyle,
+  SIMPLIFY_FOR_READING_PROMPT,
 } from './prompts'
 import azureRequest from './azure'
+import OpenAI from 'openai'
 
-const mockGetNextWord = () => {
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+})
+
+const mockGetNextWords = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve('Hello')
+      resolve(['Hello', 'Goodbye', 'Please', 'Thank', 'You'])
     }, Math.random() * 2000)
   })
 }
@@ -39,11 +47,13 @@ const buildMessages = (
   systemMessage,
   text,
   prePrompt = null,
-  profile = null
+  profile = null,
+  type = 'chat'
 ) => {
   const messages = [systemMessage]
 
-  const prompt = prePrompt ? formatPrePrompt(text, prePrompt) : text
+  const prompt =
+    prePrompt && type == 'chat' ? formatPrePrompt(text, prePrompt) : text
 
   if (profile) {
     messages.push({
@@ -80,16 +90,25 @@ export async function rewriteButtonResponse(
   return data.choices[0].message.content
 }
 
-export async function rewriteText(str, prePrompt = null, profile = null) {
+export async function rewriteText(
+  str,
+  prePrompt = null,
+  profile = null,
+  style = ''
+) {
   const data = await makeRequest({
     messages: buildMessages(
       {
         role: 'system',
-        content: REWRITE_SYSTEM_PROMPT,
+        content:
+          style == 'minimal'
+            ? extraRewritePromptForStyle(style)
+            : `${REWRITE_SYSTEM_PROMPT}\n${extraRewritePromptForStyle(style)}`,
       },
       str,
       prePrompt,
-      profile
+      profile,
+      style !== 'formal' ? 'rewrite' : undefined
     ),
   })
 
@@ -118,12 +137,60 @@ export async function suggestResponseButtons(
   return responses
 }
 
+const extractFirstWordFromText = (text) => {
+  const words = text.split(' ')
+  return words[0]
+}
+
 export async function suggestNextWords(
   str,
   preprompt = null,
   profile = null,
   maxWords = 5
 ) {
+  console.log(preprompt, str)
+  const completion = await openai.completions.create({
+    model: 'gpt-3.5-turbo-instruct',
+    prompt: `You are responding to an email, some information about you: ${profile.replace(
+      /[\t\n]/g,
+      ' '
+    )}. Email you are responding to: ${preprompt.text.replace(
+      /[\t\n]/g,
+      ' '
+    )} Response: ${str.replace(/[\t\n]/g, ' ')}`,
+    temperature: 1,
+    max_tokens: 10,
+    logprobs: 5,
+    n: 5,
+  })
+  console.log('completion', completion)
+
+  let _words = completion.choices.map((choice) =>
+    extractFirstWordFromText(choice.text)
+  )
+  _words = _words.filter((word) => word !== '')
+  return [...new Set(_words)]
+
+  return _words
+
+  // const logprobs = completion.choices[0].logprobs.top_logprobs
+  // if (!logprobs.length) return []
+
+  // const first = logprobs[0]
+  // // word and probability pairs
+  // const _words = Object.keys(first).map((word) => ({
+  //   word,
+  //   probability: Math.exp(first[word]),
+  // }))
+  // _words.sort((a, b) => b.probability - a.probability)
+  // console.log(
+  //   'completion',
+  //   _words.map((w) => `${w.word} (${w.probability})`).join(', ')
+  // )
+  // return _words.map((word) => word.word)
+
+  // console.log('completion', _words)
+
   const prompt = preprompt ? formatPrePrompt(str, preprompt) : str
 
   if (ACTIVE_CLIENT === 'azure') {
@@ -281,4 +348,22 @@ export async function getCompletion(str, preprompt = null, profile = null) {
   )
 
   return words
+}
+
+export async function simplifyText(str) {
+  if (ACTIVE_CLIENT == 'azure') {
+    const data = await makeRequest({
+      messages: [
+        {
+          role: 'system',
+          content: SIMPLIFY_FOR_READING_PROMPT,
+        },
+        {
+          role: 'user',
+          content: str,
+        },
+      ],
+    })
+    return data.choices[0].message.content
+  }
 }

@@ -2,6 +2,7 @@ import { atom, useAtom, useAtomValue } from 'jotai'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
 import { atomWithStorage } from 'jotai/utils'
+import { EMAILS } from './emails'
 
 export const suggestedWordsAtom = atom([])
 
@@ -24,7 +25,7 @@ export const availableTools = [
 export const activeToolAtom = atomWithStorage('activeTool', availableTools[0])
 
 export const toolSettingsAtom = atomWithStorage('toolSettings', {
-  autoCompleteDelay: 5000,
+  autoCompleteDelay: 500,
   autoCompleteMaxWords: 5,
 })
 
@@ -65,3 +66,13 @@ export const useNextWords = (prompt = '') => {
 
   return words
 }
+
+export const INITIAL_EMAILS_STATE = EMAILS.map((email) => ({
+  ...email,
+  responses: [],
+  read: false,
+}))
+
+export const emailsAtom = atomWithStorage('emails', INITIAL_EMAILS_STATE)
+
+export const selectedEmailAtom = atom(null)

@@ -15,7 +15,8 @@ export default function useApi() {
         profile,
         toolSettings.autoCompleteMaxWords
       ),
-    rewriteText: (text) => api.rewriteText(text, preprompt, profile),
+    rewriteText: (text, style) =>
+      api.rewriteText(text, preprompt, profile, style),
     rewriteButtonResponse: (text) =>
       api.rewriteButtonResponse(text, preprompt, profile),
     suggestResponseButtons: () =>
@@ -27,5 +28,6 @@ export default function useApi() {
         profile,
         toolSettings.autoCompleteMaxWords
       ),
+    simplifyText: (text) => api.simplifyText(text),
   }
 }

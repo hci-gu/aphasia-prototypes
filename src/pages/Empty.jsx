@@ -11,8 +11,7 @@ const EmptyPage = () => {
   }, [])
 
   return (
-    <div>
-      <h1>Empty Page</h1>
+    <div style={{ paddingTop: 64 }}>
       <CustomEditor />
     </div>
   )

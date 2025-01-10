@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { useMemo } from 'react'
-import { createEditor, Editor } from 'slate'
+import { createEditor, Editor, Node, Transforms } from 'slate'
 import { Editable, Slate, withReact } from 'slate-react'
 import { useAtomValue } from 'jotai'
 import {
@@ -14,6 +14,14 @@ import {
 import AutoComplete from './AutoComplete'
 import Rewriter from './Rewriter'
 import ResponseButtons from './ResponseButtons'
+import { Button } from '@mantine/core'
+import { IconMail } from '@tabler/icons-react'
+
+const INITAL_EDITOR_VALUE = [
+  {
+    children: [{ text: '' }],
+  },
+]
 
 const Leaf = ({ attributes, children, leaf }) => {
   if (leaf.bold) {
@@ -42,7 +50,7 @@ const toggleMark = (editor, format) => {
 
 const Root = styled.div`
   margin: 0 auto;
-  width: 80vw;
+  width: 60vw;
 
   display: flex;
   flex-direction: column;
@@ -60,16 +68,16 @@ const EditorWrapper = styled.div`
 
 const heightForTool = (tool) => {
   switch (tool) {
-    case TOOL_REWRITER:
-      return '140px'
-    case TOOL_RESPONSE_BUTTONS:
-      return '140px'
+    // case TOOL_REWRITER:
+    //   return '140px'
+    // case TOOL_RESPONSE_BUTTONS:
+    //   return '140px'
     default:
-      return '400px'
+      return '200px'
   }
 }
 
-const CustomEditor = () => {
+const CustomEditor = ({ onActionClick = () => {} }) => {
   const editor = useMemo(() => withReact(createEditor()), [])
   const activeTool = useAtomValue(activeToolAtom)
 
@@ -80,24 +88,19 @@ const CustomEditor = () => {
           minHeight: heightForTool(activeTool),
         }}
       >
-        <Slate
-          editor={editor}
-          initialValue={[
-            {
-              children: [{ text: '' }],
-            },
-          ]}
-        >
-          {(activeTool == TOOL_AUTOCOMPLETE ||
+        <Slate editor={editor} initialValue={INITAL_EDITOR_VALUE}>
+          {/* {(activeTool == TOOL_AUTOCOMPLETE ||
             activeTool == TOOL_AUTOCOMPLETE_ON_KEY) && (
-            <AutoComplete type={activeTool} />
-          )}
+            )} */}
+          <AutoComplete type={TOOL_AUTOCOMPLETE} />
+          <Rewriter editor={editor} />
           <Editable
             style={{
               height: '100%',
               outline: 'none', // Remove default input styling
               border: 'none', // Remove default input border
               padding: 0, // Remove default input padding
+              paddingBottom: 48,
               margin: 0, // Remove default input margin
             }}
             renderLeaf={(props) => <Leaf {...props} />}
@@ -120,11 +123,38 @@ const CustomEditor = () => {
             }}
           />
         </Slate>
+        <Button
+          onClick={() => {
+            const editorText = editor.children
+              .map((node) => Node.string(node))
+              .join('\n')
+            onActionClick(editorText)
+            // Clear the editor
+            Editor.withoutNormalizing(editor, () => {
+              Transforms.delete(editor, {
+                at: {
+                  anchor: Editor.start(editor, []),
+                  focus: Editor.end(editor, []),
+                },
+              })
+            })
+          }}
+          style={{
+            position: 'absolute',
+            bottom: 12,
+            left: 12,
+          }}
+        >
+          <IconMail
+            size={24}
+            style={{
+              marginRight: 8,
+            }}
+          />
+          Skicka
+        </Button>
       </EditorWrapper>
-      {activeTool == TOOL_REWRITER && <Rewriter editor={editor} />}
-      {activeTool == TOOL_RESPONSE_BUTTONS && (
-        <ResponseButtons editor={editor} />
-      )}
+      <ResponseButtons editor={editor} />
     </Root>
   )
 }
